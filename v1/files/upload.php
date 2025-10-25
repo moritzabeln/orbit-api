@@ -1,13 +1,6 @@
 <?php
-require_once __DIR__ . '/config.php';
-
-// === API KEY CHECK ===
-$clientApiKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
-if ($clientApiKey !== $API_KEY) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
+require_once __DIR__ . '/../../db.php';
+require_once __DIR__ . '/../../config.php';
 
 // === INPUT VALIDATION ===
 $userId = isset($_POST['userId']) ? intval($_POST['userId']) : 0;
@@ -34,18 +27,11 @@ if (!move_uploaded_file($file['tmp_name'], $filepath)) {
 }
 
 // === SAVE TO DATABASE ===
-try {
-    $pdo = new PDO("mysql:host=$DB_HOST;dbname=$DB_NAME", $DB_USER, $DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'DB connection failed']);
-    exit;
-}
+$pdo = getPDO();
 
 // Insert OR update (overwrite) if user/filename combo already exists
 $stmt = $pdo->prepare(
-    "INSERT INTO user_files (user_id, file_name, file_path, original_filename) VALUES (?, ?, ?, ?)
+    "INSERT INTO user_files (userId, file_name, file_path, original_filename) VALUES (?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE file_path=VALUES(file_path), original_filename=VALUES(original_filename), upload_date=NOW()"
 );
 if (!$stmt->execute([$userId, $filenameKey, $storedFilename, $file['name']])) {

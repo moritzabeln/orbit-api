@@ -1,0 +1,26 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Don't rewrite requests for actual files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route all /api/ requests through index.php
+RewriteRule ^api/ index.php [L,QSA]
+
+# Prevent direct access to config files
+<FilesMatch "^config\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent direct access to db.php
+<FilesMatch "^db\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Optional: Allow CORS for API requests (uncomment if needed)
+# Header set Access-Control-Allow-Origin "*"
+# Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+# Header set Access-Control-Allow-Headers "Content-Type, X-API-KEY"
