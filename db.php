@@ -24,7 +24,7 @@ function getPDO(): PDO {
         } catch (\PDOException $e) {
             http_response_code(500);
             echo json_encode([
-                'error' => 'Database connection failed',
+                'error' => 'Database connection failed: ' . $e->getMessage(),
                 'details' => $e->getMessage()
             ]);
             exit;

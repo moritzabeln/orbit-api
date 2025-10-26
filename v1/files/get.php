@@ -1,19 +1,26 @@
 <?php
 require_once __DIR__ . '/../../db.php';
-require_once __DIR__ . '/../../config.php';
+$config = require __DIR__ . '/../../config.php';
 
 // === INPUT VALIDATION ===
-$userId = isset($_GET['userId']) ? intval($_GET['userId']) : 0;
+$userId = isset($_GET['userId']) ? trim($_GET['userId']) : '';
 $filenameKey = isset($_GET['filename']) ? trim($_GET['filename']) : '';
-if ($userId <= 0 || $filenameKey === '') {
+
+if ($userId === '') {
     http_response_code(400);
-    echo json_encode(['error' => 'Missing userId or filename']);
+    echo json_encode(['error' => 'Missing or invalid userId']);
+    exit;
+}
+
+if ($filenameKey === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing or invalid filename']);
     exit;
 }
 
 // === RETRIEVE FILE INFO ===
 $pdo = getPDO();
-$stmt = $pdo->prepare("SELECT file_path, original_filename FROM user_files WHERE userId = ? AND file_name = ?");
+$stmt = $pdo->prepare("SELECT file_path, original_filename FROM user_files WHERE user_id = ? AND file_name = ?");
 if (!$stmt->execute([$userId, $filenameKey])) {
     http_response_code(500);
     echo json_encode(['error' => 'DB query failed']);
@@ -28,7 +35,7 @@ if (!$result) {
 }
 
 // === SERVE FILE ===
-$filepath = $UPLOAD_DIR . $result['file_path'];
+ $filepath = $config['UPLOAD_DIR'] . $result['file_path'];
 if (!file_exists($filepath)) {
     http_response_code(404);
     echo json_encode(['error' => 'File not found on server']);
@@ -42,7 +49,9 @@ finfo_close($finfo);
 
 // Send file
 header('Content-Type: ' . $mimeType);
-header('Content-Disposition: attachment; filename="' . basename($result['original_filename']) . '"');
+header('Content-Disposition: inline; filename="' . basename($result['original_filename']) . '"');
 header('Content-Length: ' . filesize($filepath));
+
 readfile($filepath);
+exit;
 ?>

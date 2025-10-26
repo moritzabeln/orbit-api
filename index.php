@@ -1,7 +1,7 @@
 <?php
 // index.php - Main router
 
-require_once __DIR__ . '/config.php';
+$config = require __DIR__ . '/config.php';
 
 // --- Define all routes ---
 $routes = [
@@ -31,7 +31,7 @@ $route = $routes[$requestPath];
 // --- API KEY CHECK (if auth required) ---
 if ($route['auth']) {
     $clientApiKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
-    if ($clientApiKey !== $API_KEY) {
+    if ($clientApiKey !== $config['API_KEY']) {
         http_response_code(401);
         echo json_encode(['error' => 'Unauthorized']);
         exit;
